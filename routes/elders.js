@@ -81,7 +81,20 @@ router.get("/:id", (req, res) => {
     )
     .all(elder.id);
 
-  res.json({ ...elder, bed: bedInfo, caregivers, reviews, careRecords });
+  const dietaryRecords = db
+    .prepare(
+      "SELECT * FROM dietary_records WHERE elder_id = ? ORDER BY meal_date DESC, meal_type DESC LIMIT 20",
+    )
+    .all(elder.id);
+
+  res.json({
+    ...elder,
+    bed: bedInfo,
+    caregivers,
+    reviews,
+    careRecords,
+    dietaryRecords,
+  });
 });
 
 router.post("/", (req, res) => {
@@ -473,6 +486,9 @@ router.delete("/:id", (req, res) => {
       req.params.id,
     );
     db.prepare("DELETE FROM qualification_reviews WHERE elder_id = ?").run(
+      req.params.id,
+    );
+    db.prepare("DELETE FROM dietary_records WHERE elder_id = ?").run(
       req.params.id,
     );
     db.prepare("DELETE FROM elders WHERE id = ?").run(req.params.id);
