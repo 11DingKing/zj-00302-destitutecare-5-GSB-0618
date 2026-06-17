@@ -11,6 +11,7 @@ function isDatabaseEmpty() {
 
 function clearAll() {
   const tables = [
+    "dietary_records",
     "handover_elder_items",
     "shift_handovers",
     "schedules",
@@ -23,7 +24,7 @@ function clearAll() {
   ];
   tables.forEach((table) => db.prepare(`DELETE FROM ${table}`).run());
   db.prepare(
-    "DELETE FROM sqlite_sequence WHERE name IN ('elders','beds','caregivers','caregiver_assignments','care_records','qualification_reviews','schedules','shift_handovers','handover_elder_items')",
+    "DELETE FROM sqlite_sequence WHERE name IN ('elders','beds','caregivers','caregiver_assignments','care_records','qualification_reviews','schedules','shift_handovers','handover_elder_items','dietary_records')",
   ).run();
   console.log("已清空所有数据");
 }
@@ -598,6 +599,79 @@ function seedHandovers() {
   console.log(`已创建 ${handovers.length} 条交接班记录`);
 }
 
+function seedDietaryRecords() {
+  const elders = db
+    .prepare("SELECT * FROM elders WHERE status != '已转出'")
+    .all();
+  const today = new Date();
+  const records = [];
+
+  const mealTypes = ["早餐", "午餐", "晚餐"];
+
+  for (let day = 0; day < 7; day++) {
+    const mealDate = new Date(today);
+    mealDate.setDate(mealDate.getDate() - day);
+    const dateStr = mealDate.toISOString().split("T")[0];
+
+    elders.forEach((elder) => {
+      let dietaryType = "普食";
+      let notes = "";
+
+      if (elder.self_care_level === "失能") {
+        dietaryType = "流质饮食";
+        notes = "鼻饲进食，少食多餐";
+      } else if (elder.self_care_level === "半失能") {
+        dietaryType = "软食";
+        notes = "食物软烂，便于咀嚼吞咽";
+      }
+
+      if (elder.health_status && elder.health_status.includes("糖尿病")) {
+        dietaryType = "糖尿病餐";
+        notes = "低糖饮食，控制碳水摄入";
+      } else if (
+        elder.health_status &&
+        elder.health_status.includes("高血压")
+      ) {
+        dietaryType = "低盐餐";
+        notes = "低盐低脂，每日钠盐不超过2g";
+      }
+
+      mealTypes.forEach((mealType, idx) => {
+        let mealNotes = notes;
+        if (mealType === "早餐") {
+          mealNotes = notes ? `${notes}，早餐清淡易消化` : "早餐清淡易消化";
+        } else if (mealType === "午餐") {
+          mealNotes = notes ? `${notes}，午餐营养均衡` : "午餐营养均衡";
+        } else if (mealType === "晚餐") {
+          mealNotes = notes ? `${notes}，晚餐少食` : "晚餐少食，清淡为主";
+        }
+
+        records.push({
+          elder_id: elder.id,
+          meal_date: dateStr,
+          meal_type: mealType,
+          dietary_type: dietaryType,
+          notes: mealNotes,
+        });
+      });
+    });
+  }
+
+  const stmt = db.prepare(`
+    INSERT OR IGNORE INTO dietary_records (elder_id, meal_date, meal_type, dietary_type, notes)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  const tx = db.transaction(() => {
+    records.forEach((r) =>
+      stmt.run(r.elder_id, r.meal_date, r.meal_type, r.dietary_type, r.notes),
+    );
+  });
+
+  tx();
+  console.log(`已创建 ${records.length} 条膳食记录`);
+}
+
 function seedCareRecords() {
   const caregivers = db
     .prepare("SELECT * FROM caregivers WHERE status = '在岗'")
@@ -716,6 +790,7 @@ function seedAll() {
   seedCareRecords();
   seedSchedules();
   seedHandovers();
+  seedDietaryRecords();
   console.log("\n已创建示例数据：");
   console.log("  - 14 个床位（自理/半失能/失能分区）");
   console.log("  - 10 名护理人员（按等级分配）");
@@ -724,6 +799,7 @@ function seedAll() {
   console.log("  - 近3天护理记录（含异常上报示例）");
   console.log("  - 7天排班记录");
   console.log("  - 交接班记录及老人交接明细");
+  console.log("  - 近7天膳食记录（按老人健康状况匹配膳食类型）");
 }
 
 function run() {
