@@ -475,6 +475,9 @@ router.delete("/:id", (req, res) => {
     db.prepare("DELETE FROM qualification_reviews WHERE elder_id = ?").run(
       req.params.id,
     );
+    db.prepare("DELETE FROM dietary_records WHERE elder_id = ?").run(
+      req.params.id,
+    );
     db.prepare("DELETE FROM elders WHERE id = ?").run(req.params.id);
   });
 
