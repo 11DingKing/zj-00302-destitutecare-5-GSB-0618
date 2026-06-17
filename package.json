@@ -1,0 +1,25 @@
+{
+  "name": "destitute-care-center",
+  "version": "1.0.0",
+  "description": "特困人员集中供养中心后端管理系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "init-db": "node scripts/initData.js",
+    "reset-db": "node scripts/initData.js"
+  },
+  "keywords": [
+    "elderly",
+    "care",
+    "management"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "better-sqlite3": "^9.4.3",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  }
+}
