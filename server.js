@@ -11,6 +11,7 @@ const reviewsRouter = require("./routes/reviews");
 const statisticsRouter = require("./routes/statistics");
 const schedulesRouter = require("./routes/schedules");
 const handoversRouter = require("./routes/handovers");
+const mealsRouter = require("./routes/meals");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +35,7 @@ app.get("/", (req, res) => {
       reviews: "/api/reviews - 资格复核",
       schedules: "/api/schedules - 排班管理",
       handovers: "/api/handovers - 交接班管理",
+      meals: "/api/meals - 膳食管理",
       statistics: "/api/statistics - 统计报表",
     },
   });
@@ -46,6 +48,7 @@ app.use("/api/care-records", careRecordsRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/schedules", schedulesRouter);
 app.use("/api/handovers", handoversRouter);
+app.use("/api/meals", mealsRouter);
 app.use("/api/statistics", statisticsRouter);
 
 app.use((err, req, res, next) => {
@@ -83,6 +86,13 @@ app.listen(PORT, () => {
   console.log(`   GET  /api/handovers/abnormal - 异常交接提醒`);
   console.log(`   POST /api/handovers        - 提交交接班`);
   console.log(`   POST /api/handovers/:id/confirm - 确认签收`);
+  console.log(`   GET  /api/meals            - 获取膳食记录列表`);
+  console.log(`   GET  /api/meals/daily      - 按日膳食安排（按老人分组）`);
+  console.log(`   GET  /api/meals/:id        - 获取单条膳食记录`);
+  console.log(`   POST /api/meals            - 登记膳食安排`);
+  console.log(`   POST /api/meals/bulk       - 批量登记膳食`);
+  console.log(`   PUT  /api/meals/:id        - 更新膳食记录`);
+  console.log(`   DELETE /api/meals/:id      - 删除膳食记录`);
   console.log(`   GET  /api/statistics/overview - 总览统计`);
   console.log(`   GET  /api/statistics/by-self-care-level - 按自理等级统计`);
   console.log(
