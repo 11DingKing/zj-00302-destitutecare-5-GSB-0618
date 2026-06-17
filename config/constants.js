@@ -30,6 +30,18 @@ const SHIFT_TIMES = {
 
 const REVIEW_RESULTS = ["符合", "不符合"];
 
+const MEAL_TYPES = ["早餐", "午餐", "晚餐"];
+
+const DIET_TYPES = [
+  "普食",
+  "软食",
+  "糖尿病餐",
+  "低盐餐",
+  "低脂餐",
+  "流质饮食",
+  "半流质饮食",
+];
+
 function canTransitionStatus(fromStatus, toStatus) {
   const allowed = STATUS_FLOW[fromStatus];
   return allowed ? allowed.includes(toStatus) : false;
@@ -81,6 +93,8 @@ module.exports = {
   SHIFTS,
   SHIFT_TIMES,
   REVIEW_RESULTS,
+  MEAL_TYPES,
+  DIET_TYPES,
   canTransitionStatus,
   getRequiredCaregivers,
   getCareRatioInfo,
