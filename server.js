@@ -11,6 +11,7 @@ const reviewsRouter = require("./routes/reviews");
 const statisticsRouter = require("./routes/statistics");
 const schedulesRouter = require("./routes/schedules");
 const handoversRouter = require("./routes/handovers");
+const mealsRouter = require("./routes/meals");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +35,7 @@ app.get("/", (req, res) => {
       reviews: "/api/reviews - 资格复核",
       schedules: "/api/schedules - 排班管理",
       handovers: "/api/handovers - 交接班管理",
+      meals: "/api/meals - 膳食管理",
       statistics: "/api/statistics - 统计报表",
     },
   });
@@ -46,6 +48,7 @@ app.use("/api/care-records", careRecordsRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/schedules", schedulesRouter);
 app.use("/api/handovers", handoversRouter);
+app.use("/api/meals", mealsRouter);
 app.use("/api/statistics", statisticsRouter);
 
 app.use((err, req, res, next) => {
@@ -89,5 +92,9 @@ app.listen(PORT, () => {
     `   GET  /api/statistics/care-ratio - 护理配比统计（含不匹配明细）`,
   );
   console.log(`   GET  /api/statistics/review-completion - 复核完成率`);
-  console.log(`   GET  /api/statistics/handover-completion - 交接完成率\n`);
+  console.log(`   GET  /api/statistics/handover-completion - 交接完成率`);
+  console.log(`   GET  /api/meals             - 获取膳食记录`);
+  console.log(`   POST /api/meals             - 登记膳食安排`);
+  console.log(`   PUT  /api/meals/:id         - 更新膳食记录`);
+  console.log(`   DELETE /api/meals/:id       - 删除膳食记录\n`);
 });
