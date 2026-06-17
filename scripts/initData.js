@@ -17,13 +17,14 @@ function clearAll() {
     "care_records",
     "qualification_reviews",
     "caregiver_assignments",
+    "meals",
     "elders",
     "caregivers",
     "beds",
   ];
   tables.forEach((table) => db.prepare(`DELETE FROM ${table}`).run());
   db.prepare(
-    "DELETE FROM sqlite_sequence WHERE name IN ('elders','beds','caregivers','caregiver_assignments','care_records','qualification_reviews','schedules','shift_handovers','handover_elder_items')",
+    "DELETE FROM sqlite_sequence WHERE name IN ('elders','beds','caregivers','caregiver_assignments','care_records','qualification_reviews','schedules','shift_handovers','handover_elder_items','meals')",
   ).run();
   console.log("已清空所有数据");
 }
@@ -708,6 +709,92 @@ function seedCareRecords() {
   console.log(`已创建 ${records.length} 条护理记录`);
 }
 
+function seedMeals() {
+  const elders = db
+    .prepare(
+      "SELECT * FROM elders WHERE status IN ('在住', '外出就医', '已复核')",
+    )
+    .all();
+  const today = new Date();
+  const records = [];
+
+  const dietMap = {
+    自理: "普食",
+    半失能: "软食",
+    失能: "流质饮食",
+  };
+
+  for (let day = 0; day < 3; day++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - day);
+    const dateStr = date.toISOString().split("T")[0];
+
+    elders.forEach((elder) => {
+      const baseDiet = dietMap[elder.self_care_level] || "普食";
+
+      const mealShifts = ["早餐", "午餐", "晚餐"];
+      mealShifts.forEach((shift) => {
+        let dietType = baseDiet;
+        let restrictions = "";
+
+        if (elder.health_status && elder.health_status.includes("糖尿病")) {
+          dietType = "糖尿病餐";
+          restrictions = "控制碳水摄入";
+        }
+        if (elder.health_status && elder.health_status.includes("高血压")) {
+          dietType = "低盐餐";
+          restrictions = "低盐饮食";
+        }
+        if (elder.health_status && elder.health_status.includes("瘫痪")) {
+          dietType = "鼻饲饮食";
+          restrictions = "鼻饲进食，250ml/次";
+        }
+        if (elder.health_status && elder.health_status.includes("阿尔茨海默")) {
+          dietType = "软食";
+          restrictions = "防误咽，食物细碎";
+        }
+        if (elder.health_status && elder.health_status.includes("帕金森")) {
+          dietType = "软食";
+          restrictions = "防误咽，食物细碎";
+        }
+
+        if (shift === "早餐") {
+          restrictions += restrictions ? "；" : "";
+          restrictions += "清淡为主";
+        }
+
+        records.push({
+          elder_id: elder.id,
+          meal_date: dateStr,
+          meal_shift: shift,
+          diet_type: dietType,
+          dietary_restrictions: restrictions,
+        });
+      });
+    });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO meals (elder_id, meal_date, meal_shift, diet_type, dietary_restrictions)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  const tx = db.transaction(() => {
+    records.forEach((r) =>
+      stmt.run(
+        r.elder_id,
+        r.meal_date,
+        r.meal_shift,
+        r.diet_type,
+        r.dietary_restrictions,
+      ),
+    );
+  });
+
+  tx();
+  console.log(`已创建 ${records.length} 条膳食记录`);
+}
+
 function seedAll() {
   seedBeds();
   seedCaregivers();
@@ -716,6 +803,7 @@ function seedAll() {
   seedCareRecords();
   seedSchedules();
   seedHandovers();
+  seedMeals();
   console.log("\n已创建示例数据：");
   console.log("  - 14 个床位（自理/半失能/失能分区）");
   console.log("  - 10 名护理人员（按等级分配）");
@@ -724,6 +812,7 @@ function seedAll() {
   console.log("  - 近3天护理记录（含异常上报示例）");
   console.log("  - 7天排班记录");
   console.log("  - 交接班记录及老人交接明细");
+  console.log("  - 近3天膳食安排记录");
 }
 
 function run() {

@@ -130,6 +130,19 @@ function initDatabase() {
       FOREIGN KEY (elder_id) REFERENCES elders(id),
       FOREIGN KEY (care_record_id) REFERENCES care_records(id)
     );
+
+    CREATE TABLE IF NOT EXISTS meals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      elder_id INTEGER NOT NULL,
+      meal_date TEXT NOT NULL,
+      meal_shift TEXT NOT NULL CHECK(meal_shift IN ('早餐', '午餐', '晚餐')),
+      diet_type TEXT NOT NULL CHECK(diet_type IN ('普食', '软食', '糖尿病餐', '低盐餐', '低脂餐', '流质饮食', '鼻饲饮食')),
+      dietary_restrictions TEXT,
+      created_at TEXT DEFAULT (datetime('now', 'localtime')),
+      updated_at TEXT DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (elder_id) REFERENCES elders(id),
+      UNIQUE(elder_id, meal_date, meal_shift)
+    );
   `);
 
   console.log("数据库初始化完成");
